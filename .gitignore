@@ -192,3 +192,12 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# DVC file
+.dvc/cache
+.dvc/tmp
+.dvc/lock
+
+# Directories with DVC-tracked data
+data/raw/
+data/processed/
