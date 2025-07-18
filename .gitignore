@@ -201,3 +201,4 @@ cython_debug/
 # Directories with DVC-tracked data
 data/raw/
 data/processed/
+/data
