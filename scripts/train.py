@@ -1,31 +1,31 @@
 import tensorflow as tf
 from tensorflow.keras import layers
-import matplotlib.pyplot as plt
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from pathlib import Path
 
 # --- 1. Configuration ---
-# Define constants for our data and model. This is a best practice.
 DATA_DIR = Path("data/processed")
-IMAGE_SIZE = (224, 224) # Standard size for many pre-trained models
+# Updated image size for EfficientNetV2B3 for optimal performance
+IMAGE_SIZE = (300, 300) 
 BATCH_SIZE = 32 
-AUTOTUNE = tf.data.AUTOTUNE # A special value for tf.data to find the best perfromance settings
+AUTOTUNE = tf.data.AUTOTUNE
+NUM_CLASSES = 120
+# Increased epochs to give the model more time to learn
+HEAD_EPOCHS = 15
+FINE_TUNE_EPOCHS = 50
 
 # --- 2. The Data Pipeline Function ---
-
 def create_data_pipelines():
     """
-    Creates and return TensorFlow Fataset objects for train, validation, adn tests sets.
-    This function encapsulates all of the data laoding and preprocessing logic.
+    Creates and returns TensorFlow Dataset objects for train, validation, and test sets.
     """
-    # Load the datastets from the directory structre using a Keras utility.
-    # It infers class names from the foler names and creates integer labels.
     train_ds = tf.keras.utils.image_dataset_from_directory(
         DATA_DIR / "train",
         image_size=IMAGE_SIZE,
         batch_size=BATCH_SIZE,
         label_mode='int',
-        shuffle=True, # shuffle is critical for training
-        seed=42 # for reproducibility
+        shuffle=True,
+        seed=42
     )
 
     validation_ds = tf.keras.utils.image_dataset_from_directory(
@@ -33,7 +33,7 @@ def create_data_pipelines():
         image_size=IMAGE_SIZE,
         batch_size=BATCH_SIZE,
         label_mode='int',
-        shuffle=False # no need to shuffle validation data
+        shuffle=False
     )
 
     test_ds = tf.keras.utils.image_dataset_from_directory(
@@ -41,75 +41,115 @@ def create_data_pipelines():
         image_size=IMAGE_SIZE,
         batch_size=BATCH_SIZE,
         label_mode='int',
-        shuffle=False # no need to shuffle test data
+        shuffle=False
     )
 
-    # Get class names from the training datast. Keras automatically finds them.
     class_names = train_ds.class_names
     print(f"Found {len(class_names)} classes (breeds).")
 
-    # --- 3. Data Augmentation and Preprocessing Layers ---
-
-    # Create a small, sequentail model for our data augmentation
-    # These layers will only be applied to the TRAINING data.
+    # --- Data Augmentation ---
     data_augmentation = tf.keras.Sequential([
         layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.1), # Rotate by a rnadom 10%
-        layers.RandomZoom(0.1), # Zoom by a random 10%
+        layers.RandomRotation(0.2),
+        layers.RandomZoom(0.2),
+        layers.RandomShear(0.2),
+        layers.RandomTranslation(height_factor=0.1, width_factor=0.1),
+        layers.RandomContrast(0.2),
+        layers.RandomBrightness(0.2),
     ])
 
-    # Create a layer to normalize pixel values from [0, 255] to [0, 1]
-    # This is appled to ALL datasets.
-    rescaling = layers.Rescaling(1./255)
-
-    # --- 4. Apply Transformations and Optimize ---
-
-    # Apply the data augmentation ONLY to the training dataset.
-    # Use .map() to apply the layers to each batch.
-    train_ds = train_ds.map(lambda x,  y: (data_augmentation(x, training=True), y), 
+    # --- Apply Transformations and Optimize ---
+    # Apply augmentation only to the training data.
+    train_ds = train_ds.map(lambda x, y: (data_augmentation(x, training=True), y), 
                             num_parallel_calls=AUTOTUNE)
     
-    # Apply rescaling to all datasets.
-    train_ds = train_ds.map(lambda x, y: (rescaling(x), y), num_parallel_calls=AUTOTUNE)
-    validation_ds = validation_ds.map(lambda x, y: (rescaling(x), y), num_parallel_calls=AUTOTUNE)
-    test_ds = test_ds.map(lambda x, y: (rescaling(x), y), num_parallel_calls=AUTOTUNE)
+    # NOTE: EfficientNetV2 models include a rescaling layer. We no longer need our own.
+    # The manual rescaling step has been removed from all datasets.
 
-    # Configure the datasets for perfromance. This is critical for best practice!
-    # .cache() keeps the images in memory after they're loadaded off disk during the first epoch.
-    # .prefetch() overlaps data preprocessing and model execution. While the GPU is training 
-    # on batch N, the CPU is already preparing batch N+1.
+    # Configure datasets for performance.
     train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
     validation_ds = validation_ds.cache().prefetch(buffer_size=AUTOTUNE)
     test_ds = test_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
     return train_ds, validation_ds, test_ds, class_names
 
-# --- 5. Sanity Chcek and Visualization --- 
+# --- 3. Model Building Function ---
+def build_model(num_classes):
+    """
+    Builds a transfer learning model using the powerful EfficientNetV2B3 architecture.
+    """
+    # Load the pre-trained EfficientNetV2B3 model
+    base_model = tf.keras.applications.EfficientNetV2B3(
+        input_shape=(*IMAGE_SIZE, 3),
+        include_top=False, # Do not include the final classification layer
+        weights='imagenet'
+    )
 
+    # Freeze the base model to keep its learned features
+    base_model.trainable = False
+
+    # Create the new model by adding a custom classifier head
+    inputs = tf.keras.Input(shape=(*IMAGE_SIZE, 3))
+    x = base_model(inputs, training=False)
+    x = layers.GlobalAveragePooling2D()(x)
+    # Add a Dropout layer for regularization to prevent overfitting
+    x = layers.Dropout(0.5)(x) 
+    outputs = layers.Dense(num_classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs, outputs)
+    return model 
+
+# --- 4. Main Execution Block --- 
 if __name__ == "__main__":
-    # This block will only run when you execute `python scripts/train.py` directly.
-    # It's a great way to test our data pipeline.
+    # 1. Create the data pipelines
+    train_ds, validation_ds, _, _ = create_data_pipelines()
 
-    train_ds, _, _, class_names = create_data_pipelines()
+    # 2. Build the model
+    model = build_model(NUM_CLASSES)
+    model.summary()
 
-    print("\n--- Pipeline Sanity Check ---")
-    # Use .take(1) to get just one batch from the dataset.
-    for images, labels in train_ds.take(1):
-        print(f"Image batch shape: {images.shape}")
-        print(f"Label batch shape: {labels.shape}")
-        
-        # Verify that pixel values are now between 0 and 1 
-        print(f"Min pixel value: {tf.reduce_min(images[0]).numpy():.4f}")
-        print(f"Max pixel value: {tf.reduce_max(images[0]).numpy():.4f}")
+    # Define callbacks that will apply to both training phases
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=1e-6)
 
-        # Visualize the output. This is the best way to confirm the augmentation is working.
-        plt.figure(figsize=(10, 10))
-        for images, labels in train_ds.take(1):
-            for i in range(9):
-                ax = plt.subplot(3, 3, i + 1)
-                plt.imshow(images[i].numpy())
-                plt.title(class_names[labels[i]])
-                plt.axis("off")
-        plt.suptitle("Sample Augmented Images from the Training Pipeline")
-        plt.savefig("data_pipeline_sanity_check.png")
-        print("\nSaved a visualization of a sample batch to 'data_pipeline_sanity_check.png'")
+    # --- PHASE 1: TRAIN THE HEAD ---
+    print(f"\n--- Starting Head Training for {HEAD_EPOCHS} epochs ---")
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+        metrics=['accuracy']
+    )
+
+    history_head = model.fit(
+        train_ds, 
+        validation_data=validation_ds,
+        epochs=HEAD_EPOCHS,
+        callbacks=[early_stopping, reduce_lr]
+    )
+
+    # --- PHASE 2: FINE-TUNE THE MODEL ---
+    print(f"\n--- Starting Fine-Tuning for {FINE_TUNE_EPOCHS} epochs ---")
+    base_model = model.layers[1] # Get the base model layer
+    base_model.trainable = True # Unfreeze the entire base model
+
+    # Recompile the model with a very low learning rate for fine-tuning
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+        metrics=['accuracy']
+    )   
+
+    # Continue training the model
+    history_fine_tune = model.fit(
+        train_ds, 
+        validation_data=validation_ds,
+        epochs=FINE_TUNE_EPOCHS,
+        callbacks=[early_stopping, reduce_lr]
+    )
+
+    # 5. Save the final trained model
+    print("\n--- Training Complete ---")
+    Path("models").mkdir(exist_ok=True)
+    # Update the model name to reflect the new architecture
+    model.save("models/efficientnetv2b3_dog_classifier.keras")
+    print("Model saved to 'models/efficientnetv2b3_dog_classifier.keras'")
