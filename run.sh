@@ -8,7 +8,7 @@ echo "--- PULLING DATA FROM GCS WITH DVC ---"
 # This is the magic command. DVC will read the data.dvc file,
 # connect to your configured GCS remote, and download the
 # data to recreate the local `data/processed` directory structure.
-dvc pull data.dvc -f --no-scm
+dvc pull data.dvc -f
 
 echo "--- DATA PULL COMPLETE. STARTING TRAINING ---"
 
