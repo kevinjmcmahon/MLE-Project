@@ -4,7 +4,12 @@ FROM tensorflow/tensorflow:latest-gpu
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy dependency file first to leverage Docker layer caching
+# --- NEW DEFINITIVE FIX ---
+# Install system-level dependencies. The base tensorflow image does not
+# include the git client, which is required for our in-container 'git init'.
+RUN apt-get update && apt-get install -y git
+
+# Copy dependency file first
 COPY requirements.txt .
 
 # Update pip, then install from requirements.txt with no cache
@@ -17,9 +22,7 @@ COPY run.sh .
 COPY .dvc/ .dvc/
 COPY data.dvc .
 
-# --- NEW CRITICAL FIX ---
 # Initialize an empty git repository inside the container.
-# This gives DVC the context it needs to run without the --no-scm flag.
 RUN git init
 
 # Make the runner script executable
