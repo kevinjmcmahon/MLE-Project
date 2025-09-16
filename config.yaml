@@ -24,7 +24,7 @@ trialJobSpec:
       acceleratorCount: 1
     replicaCount: 1
     containerSpec:
-      imageUri: us-central1-docker.pkg.dev/red-context-466220-s0/dog-breed-repo/mle-dog-classifier:a516002
+      imageUri: us-central1-docker.pkg.dev/red-context-466220-s0/dog-breed-repo/mle-dog-classifier:7f8d3d4
       args: [
         "--fine_tune_lr=$(study.trial.parameter.fine_tune_lr)",
         "--dropout_rate=$(study.trial.parameter.dropout_rate)",
