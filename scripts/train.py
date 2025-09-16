@@ -33,8 +33,8 @@ def create_data_pipelines():
         DATA_DIR / "validation", image_size=IMAGE_SIZE, batch_size=BATCH_SIZE, label_mode='int', shuffle=False
     )
     class_names = train_ds.class_names
-    # The original print statement is now redundant as we print the dynamic count above.
-    # print(f"Found {len(class_names)} classes (breeds).") 
+
+
     data_augmentation = tf.keras.Sequential([
         layers.RandomFlip("horizontal"), layers.RandomRotation(0.2), layers.RandomZoom(0.2), layers.RandomShear(0.2),
         layers.RandomTranslation(height_factor=0.1, width_factor=0.1), layers.RandomContrast(0.2), layers.RandomBrightness(0.2),
@@ -49,7 +49,7 @@ def create_data_pipelines():
 # --- 3. Model Building Function (No changes needed) ---
 def build_model(num_classes, model_name="EfficientNetV2B3", dropout_rate=0.5):
     """Builds a transfer learning model with a specified base architecture."""
-    # PRO-TIP: Parameterizing the model name and dropout allows for easy experimentation.
+    # Parameterizing the model name and dropout allows for easy experimentation.
     if model_name == "EfficientNetV2B3":
         base_model = tf.keras.applications.EfficientNetV2B3(
             input_shape=(*IMAGE_SIZE, 3), include_top=False, weights='imagenet'
