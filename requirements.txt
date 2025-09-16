@@ -1,6 +1,7 @@
 # MLOps and Data Versioning
 # Pinning the exact version to guarantee --no-scm is present
-dvc[gcs]==3.50.2
+dvc==3.50.2
+dvc-gs==3.0.2
 
 # Google Cloud Platform SDKs
 # Pinning to a specific recent version
