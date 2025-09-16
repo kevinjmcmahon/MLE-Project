@@ -9,7 +9,8 @@ COPY requirements.txt .
 
 # Install DVC and the Python dependencies
 # We add google-cloud-aiplatform for the 'hypertune' library
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy all the necessary project files and directories
 COPY scripts/ scripts/

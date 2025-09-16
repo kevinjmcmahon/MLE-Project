@@ -1,49 +1,20 @@
-# DVC and its GCS dependency, pinned to a modern version
-dvc[gcs]>=3.0
+# MLOps and Data Versioning
+# Pinning the exact version to guarantee --no-scm is present
+dvc[gcs]==3.50.2
 
-# Pin google-cloud-storage to a version compatible with aiplatform
+# Google Cloud Platform SDKs
+# Pinning to a specific recent version
+google-cloud-aiplatform==1.47.0
+
+# CRITICAL FIX: Pinning google-cloud-storage to a version compatible with aiplatform
 google-cloud-storage==2.14.0
 
-# The Vertex AI library for hypertuning
-google-cloud-aiplatform
+# ML Framework and Experiment Tracking
+# Pinning to recent, stable versions
+tensorflow==2.15.0
+wandb==0.16.6
 
-# Your other dependencies
-tensorflow
-wandb
-################################################################################
-# Core Machine Learning Framework
-# This is the primary engine for the model training script.
-################################################################################
-tensorflow
-
-
-################################################################################
-# MLOps and Cloud Integration
-# Libraries for data versioning, experiment tracking, and cloud execution.
-################################################################################
-# Data Versioning with DVC.
-# We specify >=3.0 to ensure modern features like --no-scm are available.
-# The [gcs] extra installs the necessary libraries to connect to Google Cloud Storage.
-dvc[gcs]>=3.0
-
-# Google Cloud Platform SDKs for Vertex AI.
-# The 'hypertune' library is part of the aiplatform package.
-google-cloud-aiplatform
-
-# CRITICAL FIX: Pinning google-cloud-storage to a specific version.
-# This is the most important line in this file. It resolves the conflict between
-# dvc (which wants >=3.0) and google-cloud-aiplatform (which wants <3.0).
-# Version 2.14.0 is recent and compatible with both.
-google-cloud-storage==2.14.0
-
-# Experiment Tracking with Weights & Biases.
-wandb
-
-
-################################################################################
-# Standard Data Science & Visualization Toolkit
-# Common libraries for data exploration in notebooks and utility scripts.
-################################################################################
+# Standard Data Science Toolkit
 numpy
 pandas
 matplotlib
