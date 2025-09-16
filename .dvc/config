@@ -1,0 +1,4 @@
+[core]
+    remote = my-gcs-remote
+['remote "my-gcs-remote"']
+    url = gs://kjm-dog-breed-classifier/dvc-storage
