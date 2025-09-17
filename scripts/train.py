@@ -12,7 +12,7 @@ import hypertune # VERTEX AI CHANGE: Import the 'hypertune' library to report me
 # These are now just default values. They will be overridden by command-line args.
 DATA_DIR = Path("data/processed")
 IMAGE_SIZE = (300, 300)
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 AUTOTUNE = tf.data.AUTOTUNE
 
 # --- 2. The Data Pipeline Function (Modified for dynamic class counting) ---
