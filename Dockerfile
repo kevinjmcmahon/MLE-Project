@@ -28,3 +28,6 @@ RUN chmod +x run.sh
 
 # Set the entrypoint for the container
 ENTRYPOINT ["./run.sh"]
+
+# The CMD is the main application that receives the arguments from config.yaml.
+CMD ["python", "scripts/train.py"]

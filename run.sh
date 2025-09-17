@@ -11,9 +11,3 @@ echo "--- PULLING DATA FROM GCS WITH DVC ---"
 dvc pull data.dvc -f
 
 echo "--- DATA PULL COMPLETE. STARTING TRAINING ---"
-
-# Now, execute your Python training script.
-# We pass all the shell script's arguments ($@) directly to the python script.
-python scripts/train.py "$@"
-
-echo "--- TRAINING SCRIPT FINISHED ---"
