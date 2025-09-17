@@ -1,19 +1,16 @@
 # MLOps and Data Versioning
-# Pinning the exact version to guarantee --no-scm is present, and
-# explicitly listing dvc-gs to ensure it is installed.
 dvc==3.50.2
 dvc-gs==3.0.2
 
 # Google Cloud Platform SDKs
-# Pinning to a specific recent version to ensure stability.
-# The 'hypertune' library is included in this package.
-google-cloud-aiplatform==1.47.0
+# THIS IS THE KEY FIX: The 'hypertune' module is in this separate, lightweight package.
+# We are replacing the giant 'google-cloud-aiplatform' with this.
+cloudml-hypertune
 
-# CRITICAL FIX: Pinning google-cloud-storage to a version compatible with aiplatform
+# We still need google-cloud-storage for the DVC backend to function.
 google-cloud-storage==2.14.0
 
 # ML Framework and Experiment Tracking
-# Pinning to recent, stable versions
 tensorflow==2.15.0
 wandb==0.16.6
 
