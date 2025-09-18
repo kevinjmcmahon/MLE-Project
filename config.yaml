@@ -1,17 +1,32 @@
-# This is the correct, verified format for a Custom Job config file.
-workerPoolSpecs:
-- machineSpec:
-    machineType: n1-standard-4
-    acceleratorType: NVIDIA_TESLA_T4
-    acceleratorCount: 1
-  replicaCount: 1
-  containerSpec:
-    # Use the image from your last successful build with the verbose train.py script.
-    imageUri: us-central1-docker.pkg.dev/red-context-466220-s0/dog-breed-repo/mle-dog-classifier:d243c21
-    # Hardcoded args for the smoke test.
-    args:
-    - "--fine_tune_lr=0.0001"
-    - "--dropout_rate=0.35"
-    - "--unfreeze_layers=50"
-    - "--head_epochs=5"
-    - "--fine_tune_epochs=5"
+studySpec:
+  metrics:
+  - metricId: val_accuracy
+    goal: MAXIMIZE
+  parameters:
+  - parameterId: fine_tune_lr
+    doubleValueSpec:
+      minValue: 0.00001
+      maxValue: 0.001
+    scaleType: UNIT_LOG_SCALE
+  - parameterId: dropout_rate
+    doubleValueSpec:
+      minValue: 0.2
+      maxValue: 0.5
+    scaleType: UNIT_LINEAR_SCALE
+  - parameterId: unfreeze_layers
+    discreteValueSpec:
+      values: [20, 60, 100]
+trialJobSpec:
+  workerPoolSpecs:
+  - machineSpec:
+      machineType: n1-standard-4
+      acceleratorType: NVIDIA_TESLA_T4
+      acceleratorCount: 1
+    replicaCount: 1
+    containerSpec:
+      # We will update this imageUri in the next step
+      imageUri: us-central1-docker.pkg.dev/red-context-466220-s0/dog-breed-repo/mle-dog-classifier:<PLACEHOLDER>
+      args:
+      - "--fine_tune_lr=$(study.trial.parameter.fine_tune_lr)"
+      - "--dropout_rate=$(study.trial.parameter.dropout_rate)"
+      - "--unfreeze_layers=$(study.trial.parameter.unfreeze_layers)"
