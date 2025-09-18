@@ -9,7 +9,7 @@ jobSpec:
     replicaCount: 1
     containerSpec:
       # We use the same image as before
-      imageUri: us-central1-docker.pkg.dev/red-context-466220-s0/dog-breed-repo/mle-dog-classifier:d0f5c72
+      imageUri: us-central1-docker.pkg.dev/red-context-466220-s0/dog-breed-repo/mle-dog-classifier:d243c21
       # We provide hardcoded args instead of letting the service choose them
       args: [
         "--fine_tune_lr=0.0001",
