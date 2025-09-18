@@ -1,3 +1,5 @@
+# This is the config for the short CONFIRMATION hyperparameter tuning job.
+# Its only purpose is to prove that a short-running trial can succeed.
 studySpec:
   metrics:
   - metricId: val_accuracy
@@ -15,7 +17,7 @@ studySpec:
     scaleType: UNIT_LINEAR_SCALE
   - parameterId: unfreeze_layers
     discreteValueSpec:
-      values: [20, 60, 100]
+      values: [20, 50, 80]
 trialJobSpec:
   workerPoolSpecs:
   - machineSpec:
@@ -24,9 +26,15 @@ trialJobSpec:
       acceleratorCount: 1
     replicaCount: 1
     containerSpec:
-      # We will update this imageUri in the next step
+      # IMPORTANT: Use the Git hash from your LAST successful container build.
+      # This is the one that contains the final "production" train.py script.
       imageUri: us-central1-docker.pkg.dev/red-context-466220-s0/dog-breed-repo/mle-dog-classifier:6146086
       args:
       - "--fine_tune_lr=$(study.trial.parameter.fine_tune_lr)"
       - "--dropout_rate=$(study.trial.parameter.dropout_rate)"
       - "--unfreeze_layers=$(study.trial.parameter.unfreeze_layers)"
+      # --- THE KEY DIAGNOSTIC CHANGE ---
+      # We are explicitly telling the script to run for a very short duration.
+      - "--head_epochs=2"
+      - "--fine_tune_epochs=3"
+      - "--patience=2"
