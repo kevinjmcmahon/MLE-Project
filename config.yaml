@@ -1,4 +1,5 @@
-# This is now a simple custom job, not a hyperparameter tuning job.
+# This is the correct format for a Custom Job.
+# 'displayName' and 'jobSpec' are top-level keys.
 displayName: dog-breed-smoke-test
 jobSpec:
   workerPoolSpecs:
@@ -8,9 +9,11 @@ jobSpec:
       acceleratorCount: 1
     replicaCount: 1
     containerSpec:
-      # We use the same image as before
+      # Use the image from your last successful build.
+      # You can get the hash again by running `git log -1 --pretty=format:%h`
+      # on the commit where you added the verbose train.py script.
       imageUri: us-central1-docker.pkg.dev/red-context-466220-s0/dog-breed-repo/mle-dog-classifier:d243c21
-      # We provide hardcoded args instead of letting the service choose them
+      # We provide hardcoded args for the smoke test.
       args: [
         "--fine_tune_lr=0.0001",
         "--dropout_rate=0.35",
