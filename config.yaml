@@ -1,6 +1,5 @@
-# This is the correct format for a Custom Job.
-# 'displayName' and 'jobSpec' are top-level keys.
-displayName: dog-breed-smoke-test
+# This config file now ONLY contains the jobSpec.
+# The displayName is provided by the --display-name flag in the gcloud command.
 jobSpec:
   workerPoolSpecs:
   - machineSpec:
@@ -9,15 +8,14 @@ jobSpec:
       acceleratorCount: 1
     replicaCount: 1
     containerSpec:
-      # Use the image from your last successful build.
+      # Use the image from your last successful build with the verbose train.py script.
       # You can get the hash again by running `git log -1 --pretty=format:%h`
-      # on the commit where you added the verbose train.py script.
       imageUri: us-central1-docker.pkg.dev/red-context-466220-s0/dog-breed-repo/mle-dog-classifier:d243c21
-      # We provide hardcoded args for the smoke test.
+      # Hardcoded args for the smoke test.
       args: [
         "--fine_tune_lr=0.0001",
         "--dropout_rate=0.35",
         "--unfreeze_layers=50",
-        "--head_epochs=5",      # Run for fewer epochs to finish faster
-        "--fine_tune_epochs=5"  # Run for fewer epochs to finish faster
+        "--head_epochs=5",
+        "--fine_tune_epochs=5"
       ]
