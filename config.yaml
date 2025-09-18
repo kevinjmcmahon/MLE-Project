@@ -1,22 +1,6 @@
-studySpec:
-  metrics:
-  - metricId: val_accuracy  # Must match the tag in your HypertuneCallback
-    goal: MAXIMIZE
-  parameters:
-  - parameterId: fine_tune_lr
-    doubleValueSpec:
-      minValue: 0.00001
-      maxValue: 0.001
-    scaleType: UNIT_LOG_SCALE
-  - parameterId: dropout_rate
-    doubleValueSpec:
-      minValue: 0.2
-      maxValue: 0.5
-    scaleType: UNIT_LINEAR_SCALE
-  - parameterId: unfreeze_layers
-    discreteValueSpec:
-      values: [20, 50, 80]
-trialJobSpec:
+# This is now a simple custom job, not a hyperparameter tuning job.
+displayName: dog-breed-smoke-test
+jobSpec:
   workerPoolSpecs:
   - machineSpec:
       machineType: n1-standard-4
@@ -24,9 +8,13 @@ trialJobSpec:
       acceleratorCount: 1
     replicaCount: 1
     containerSpec:
+      # We use the same image as before
       imageUri: us-central1-docker.pkg.dev/red-context-466220-s0/dog-breed-repo/mle-dog-classifier:d0f5c72
+      # We provide hardcoded args instead of letting the service choose them
       args: [
-        "--fine_tune_lr=$(study.trial.parameter.fine_tune_lr)",
-        "--dropout_rate=$(study.trial.parameter.dropout_rate)",
-        "--unfreeze_layers=$(study.trial.parameter.unfreeze_layers)"
+        "--fine_tune_lr=0.0001",
+        "--dropout_rate=0.35",
+        "--unfreeze_layers=50",
+        "--head_epochs=5",      # Run for fewer epochs to finish faster
+        "--fine_tune_epochs=5"  # Run for fewer epochs to finish faster
       ]
